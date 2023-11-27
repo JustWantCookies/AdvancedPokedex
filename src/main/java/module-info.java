@@ -3,6 +3,6 @@ module com.example.advancedpokedex {
     requires javafx.fxml;
 
 
-    opens com.example.advancedpokedex to javafx.fxml;
-    exports com.example.advancedpokedex;
+    opens com.example.advancedpokedex.ui to javafx.fxml;
+    exports com.example.advancedpokedex.ui;
 }
