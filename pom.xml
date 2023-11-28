@@ -60,7 +60,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.example.advancedpokedex/com.example.advancedpokedex.HelloApplication
+                            <mainClass>com.example.advancedpokedex.ui/com.example.advancedpokedex.ui.GlobalPokedex
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
