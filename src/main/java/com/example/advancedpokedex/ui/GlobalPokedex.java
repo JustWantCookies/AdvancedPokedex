@@ -4,70 +4,64 @@ import com.example.adcancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.ui.internal.PokemonListCell;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.Border;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class GlobalPokedex extends Application {
 
-    //TODO Sort class
-    //TODO clean up class
+    public static final int WINDOW_WIDTH = 1000;
+    public static final int WINDOW_HEIGHT = 500;
+
     private Stage mainStage;
 
     private Scene overViewScene;
 
     @Override
     public void start(Stage stage) {
-        overViewScene = this.buildOverviewScene(callDetailPage());
         mainStage = stage;
-        stage.setTitle("Global Pokedex!");
-        stage.setScene(overViewScene);
-        stage.show();
+        overViewScene = this.buildOverviewScene(navigateToDetailPage());
+
+        mainStage.setTitle("Global Pokedex!");
+        mainStage.setScene(overViewScene);
+        mainStage.show();
     }
 
-    private Consumer<Pokemon> callDetailPage() {
+    private Consumer<Pokemon> navigateToDetailPage() {
         return pokemon -> {
             mainStage.setScene(this.buildDetailScene(pokemon));
             mainStage.show();
         };
     }
 
-    public static int WINDOW_WIDTH = 1000;
-    public static int WINDOW_HEIGHT = 500;
+    private EventHandler<MouseEvent> navigateToOverviewPage() {
+        return event -> mainStage.setScene(overViewScene);
+    }
 
-    private static final List<Pokemon> pokemonList = new ArrayList<>();
-
-    public Scene buildOverviewScene(Consumer<Pokemon> onDetailClick) {
+    private Scene buildOverviewScene(Consumer<Pokemon> onDetailClick) {
         BorderPane pane = new BorderPane();
-
         TextField searchField = new TextField();
-        searchField.setPromptText("Search your Pokemon here!");
 
-        pane.setTop(searchField);
-
-        //TODO Remove and get Real Data
-        addTestData();
-
+        List<Pokemon> pokemonList = new ArrayList<>();
         FilteredList<Pokemon> filteredData = new FilteredList<>(FXCollections.observableArrayList(pokemonList), p -> true);
-
         ListView<Pokemon> listViewPokemon = new ListView<>(filteredData);
         listViewPokemon.setCellFactory(param -> new PokemonListCell());
+
+        searchField.setPromptText("Search your Pokemon here!");
+
+        //TODO Remove and get Real Data
+        addTestData(pokemonList);
 
         listViewPokemon.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
@@ -78,32 +72,30 @@ public class GlobalPokedex extends Application {
             }
         });
 
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(pokemon -> newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()));
-        });
+        searchField.textProperty().addListener((observable, oldValue, newValue) ->
+            filteredData.setPredicate(pokemon -> newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()))
+        );
 
+        pane.setTop(searchField);
         pane.setCenter(listViewPokemon);
         return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
-    public Scene buildDetailScene(Pokemon pokemon) {
+    private Scene buildDetailScene(Pokemon pokemon) {
         BorderPane pane = new BorderPane();
-
-        Button backButton = new Button();
-        backButton.setOnMouseClicked(event -> mainStage.setScene(overViewScene));
-
-        pane.setTop(backButton);
-
-        //TODO Sett Image With Left
         TextField test = new TextField();
+        Button backButton = new Button();
+
+        backButton.setOnMouseClicked(navigateToOverviewPage());
         test.setText(pokemon.getName());
 
         pane.setCenter(test);
+        pane.setTop(backButton);
 
         return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
-    private void addTestData(){
+    private void addTestData(List<Pokemon> pokemonList){
         pokemonList.add(new Pokemon("Glumanda", 1));
         pokemonList.add(new Pokemon("Arceus", 100));
         pokemonList.add(new Pokemon("Zekrom", 50));
