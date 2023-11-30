@@ -3,6 +3,7 @@ package com.example.advancedpokedex.ui.internal;
 import com.example.adcancedpokedex.data.Pokemon;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 
 public class PokemonListCell extends ListCell<Pokemon> {
@@ -17,18 +18,27 @@ public class PokemonListCell extends ListCell<Pokemon> {
     }
 
     @Override
-    protected void updateItem(Pokemon item, boolean empty) {
-        super.updateItem(item, empty);
+    protected void updateItem(Pokemon pokemon, boolean empty) {
+        super.updateItem(pokemon, empty);
 
         setText(null);
 
-        if (empty || item == null || item.getName() == null) {
+        if (empty || pokemon == null || pokemon.getName() == null) {
             title.setText(null);
             detail.setText(null);
             setGraphic(null);
         } else {
-            title.setText(item.getName());
-            detail.setText("Level: " + item.getLevel());
+            title.setText(pokemon.getName());
+            detail.setText("Level: " + pokemon.getLevel());
+
+            /* TODO Remove
+            setOnMouseClicked(event -> {
+                if (event.getButton() == MouseButton.PRIMARY) {
+                    System.out.println("Selected Pokemon: " + pokemon.getName());
+                }
+            });
+             */
+
             setGraphic(layout);
         }
     }
