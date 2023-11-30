@@ -5,6 +5,7 @@ import com.example.advancedpokedex.ui.internal.PokemonListCell;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -17,10 +18,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class GlobalPokedex extends Application {
 
+    //TODO Sort class
+    //TODO clean up class
     private Stage mainStage;
 
     private Scene overViewScene;
@@ -44,7 +51,7 @@ public class GlobalPokedex extends Application {
     public static int WINDOW_WIDTH = 1000;
     public static int WINDOW_HEIGHT = 500;
 
-    private static ObservableList<Pokemon> pokemonList = FXCollections.observableArrayList();
+    private static final List<Pokemon> pokemonList = new ArrayList<>();
 
     public Scene buildOverviewScene(Consumer<Pokemon> onDetailClick) {
         BorderPane pane = new BorderPane();
@@ -54,10 +61,12 @@ public class GlobalPokedex extends Application {
 
         pane.setTop(searchField);
 
-        //TODO Remove
+        //TODO Remove and get Real Data
         addTestData();
 
-        ListView<Pokemon> listViewPokemon = new ListView<>(pokemonList);
+        FilteredList<Pokemon> filteredData = new FilteredList<>(FXCollections.observableArrayList(pokemonList), p -> true);
+
+        ListView<Pokemon> listViewPokemon = new ListView<>(filteredData);
         listViewPokemon.setCellFactory(param -> new PokemonListCell());
 
         listViewPokemon.setOnMouseClicked(event -> {
@@ -67,6 +76,10 @@ public class GlobalPokedex extends Application {
                     onDetailClick.accept(selectedPokemon);
                 }
             }
+        });
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(pokemon -> newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()));
         });
 
         pane.setCenter(listViewPokemon);
