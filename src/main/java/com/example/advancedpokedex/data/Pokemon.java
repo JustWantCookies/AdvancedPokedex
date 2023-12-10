@@ -1,4 +1,4 @@
-package com.example.adcancedpokedex.data;
+package com.example.advancedpokedex.data;
 
 public class Pokemon {
     //TODO fill data here
