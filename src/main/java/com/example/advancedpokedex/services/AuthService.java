@@ -2,22 +2,48 @@ package com.example.advancedpokedex.services;
 
 import com.example.advancedpokedex.data.User;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.*;
+
+import com.example.advancedpokedex.ui.LoginWindow;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 //ToDo: Write JavaDoc
 
 public class AuthService
 {
     HashSet<User> users = new HashSet<>();
-    // SecureRandom random =new SecureRandom();
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    static Random random=new Random();
+
+    final String FILENAME="users.json";
 
     public AuthService()
     {
-        //Load List from File
+        //Load Users from File, if file exits, and deserialize it
+        try
+        {
+            Path filePath = Paths.get(FILENAME);
+            if(Files.exists(filePath))
+            {
+                String json=new String(Files.readAllBytes(filePath));
+                users=objectMapper.readValue(json, new TypeReference<>(){});
+            }
+
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
 
     }
 
@@ -25,21 +51,72 @@ public class AuthService
     protected void finalize() throws Throwable
     {
         //Save list to file
+        PrintWriter writer=null;
+        try
+        {
+            writer= new PrintWriter(FILENAME);
+            String json=objectMapper.writeValueAsString(users);
+            writer.println(json);
 
+        }
+        catch (IOException e)
+        {
+           //
+        }
+        finally
+        {
+            if (writer != null)
+            {
+                writer.flush();
+                writer.close();
+            }
+        }
         super.finalize();
     }
 
+
     //region Public-Methods
+
+    public int performLogon() //returns uid
+    {
+        try
+        {
+            LoginWindow window=new LoginWindow();
+            User tmp=window.showWindow();
+
+            boolean successful = addUser(tmp.getUname(),tmp.getPasswd());
+
+            if(successful)
+                return getUserByName(tmp.getUname()).getUid();
+            else
+                return -1;
+
+        }
+        catch (Exception e)
+        {
+            return  -1;
+        }
+    }
+
+
     public boolean addUser(String username, String passwd)
     {
         //only proceed if username, password is valid
-        if (validateUsername(username) || validatePassword(passwd))
+        if (isInvalidUsername(username) || isInvalidPassword(passwd))
             return false;
 
-        throw new java.util.EmptyStackException(); //for now just throw any exception
+        try
+        {
+            int uid=generateUid();
+            String pw=hashPasswd(passwd);
+            users.add(new User(uid,username,pw));
 
-        /*try/catch*/
-
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 
     public boolean delUser(int uid)
@@ -51,7 +128,7 @@ public class AuthService
     public boolean updUser(int uid, String username, String passwd)
     {
         //check for invalid input, when detected cancel operation
-        if (validateUsername(username) || validatePassword(passwd))
+        if (isInvalidUsername(username) || isInvalidPassword(passwd))
             return false;
 
 
@@ -73,7 +150,7 @@ public class AuthService
         catch (Exception e)
         {
             //revert to old data if possible
-            if (user != null && StringIsNullOrEmpty(oldUN, oldPW))
+            if (user != null && !StringIsNullOrEmpty(oldUN, oldPW))
             {
                 updUsername(user, oldUN);
                 updPassword(user, oldPW);
@@ -85,7 +162,7 @@ public class AuthService
     public boolean updUsername(int uid, String username)
     {
         //check for invalid input, when detected cancel operation
-        if (validateUsername(username))
+        if (isInvalidUsername(username))
             return false;
 
         try
@@ -102,7 +179,7 @@ public class AuthService
     public boolean updPassword(int uid, String password)
     {
         //check for invalid input, when detected cancel operation
-        if (validatePassword(password))
+        if (isInvalidPassword(password))
             return false;
 
         try
@@ -115,6 +192,18 @@ public class AuthService
         {
             return false;
         }
+    }
+
+    public User getUserByUid(int uid) throws NoSuchElementException
+    {
+        /*
+        get user object and return it
+         or throw a NoSuchElementException
+        */
+        return users.parallelStream()
+                .filter(u -> u.getUid() == uid)
+                .findAny()
+                .orElseThrow();
     }
     //endregion Public-Methods
 
@@ -132,45 +221,42 @@ public class AuthService
 
 
     //region Private-Methods-2 (Hilfsmethoden)
-    private boolean StringIsNullOrEmpty(String... strings)
-    {
-        //ToDo: Implement validation of string
-        return false;
-    }
-
-    private User getUserByUid(int uid) throws NoSuchElementException
+    private User getUserByName(String name) throws NoSuchElementException
     {
         /*
-        get userobject and return it
+        get user object and return it
          or throw a NoSuchElementException
         */
         return users.parallelStream()
-                .filter(u -> u.getUid() == uid)
+                .filter(u -> u.getUname().equals(name))
                 .findAny()
                 .orElseThrow();
     }
 
     private int generateUid()
     {
-        //ToDo: Generate/Assign UID
-        return 0;
-        /**
-         try
-         {
-         users.parallelStream().map(u -> u.getUid());
-         //ArrayList lusers= users.parallelStream().map(u -> u.getUid()).toList();
-         //int nextUid= Collections.max(lusers);
+        boolean uidused=true;
+        int uid=-1;
 
-         }
-         catch (NullPointerException e)
-         {
-         //
-         }
-         return 0;
-         */
+        while (uidused)
+        {
+            //generate random uid
+            int randuid=random.nextInt(1000);
+
+            //check if uid already used -> no->return false, true=return true
+            uidused=users.parallelStream().noneMatch(u->u.getUid()==randuid);
+        }
+
+        return uid;
     }
 
-    private boolean validateUsername(String uname)
+    private boolean StringIsNullOrEmpty(String... strings)
+    {
+        //If any of the provided strings is null or empty -> return true
+        return Arrays.stream(strings).anyMatch(s->s==null||s.isEmpty());
+    }
+
+    private boolean isInvalidUsername(String uname)
     {
         //eventually implement username criteria
 
@@ -178,21 +264,16 @@ public class AuthService
         if (StringIsNullOrEmpty(uname))
             return false; //username blank
 
-        //check if username already used
-        if (users.parallelStream().filter(u -> u.getUname().equals(uname)).count() > 0)
-            return false; //username used
-        return true; //username free
+        //check if username already used (true=used,false=free)
+        return users.parallelStream().anyMatch(u -> u.getUname().equals(uname));
     }
 
-    private boolean validatePassword(String passwd)
+    private boolean isInvalidPassword(String passwd)
     {
         //eventually implement password criteria
 
-        //don't allow blank passwords
-        if (passwd.isBlank())
-            return false;
-
-        return true;
+        //don't allow blank passwords (true=invalid,false=valid)
+        return StringIsNullOrEmpty(passwd);
     }
 
     private String hashPasswd(String plainpw) throws NoSuchAlgorithmException
