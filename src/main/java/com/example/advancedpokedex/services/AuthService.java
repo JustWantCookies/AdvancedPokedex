@@ -84,6 +84,9 @@ public class AuthService
             LoginWindow window=new LoginWindow();
             User tmp=window.showWindow();
 
+            if(tmp==null)
+                return -1;
+
             boolean successful = addUser(tmp.getUname(),tmp.getPasswd());
 
             if(successful)
