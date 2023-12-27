@@ -16,8 +16,6 @@ import com.example.advancedpokedex.ui.LoginWindow;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-//ToDo: Write JavaDoc
-
 public class AuthService
 {
     HashSet<User> users = new HashSet<>();
@@ -77,7 +75,39 @@ public class AuthService
 
     //region Public-Methods
 
+    /**
+     * Shows Login-Window and handle Login Procedure
+     * @return userid
+     */
     public int performLogon() //returns uid
+    {
+        try
+        {
+            LoginWindow window=new LoginWindow();
+            User tmp=window.showWindow();
+
+            if(tmp==null)
+                return -1;
+
+            String pwLgn=hashPasswd(tmp.getPasswd());
+            User user=getUserByName(tmp.getUname());
+
+            if(user.getPasswd().equals(pwLgn))
+                return user.getUid(); //login successful -> return uid
+            else
+                return  -1;
+        }
+        catch (Exception e)
+        {
+            return  -1;
+        }
+    }
+
+    /**
+     * Shows Login-Window and create a user
+     * @return userid
+     */
+    public int createUser()
     {
         try
         {
@@ -101,7 +131,12 @@ public class AuthService
         }
     }
 
-
+    /**
+     * Tries to create and add a user
+     * @param username Name of User
+     * @param passwd Password of User
+     * @return creation successful
+     */
     public boolean addUser(String username, String passwd)
     {
         //only proceed if username, password is valid
@@ -122,12 +157,24 @@ public class AuthService
         }
     }
 
+    /**
+     * Tries to delete a user
+     * @param uid UserId
+     * @return deletion successful
+     */
     public boolean delUser(int uid)
     {
         //remove user wih provided uid from list, returns true if successful else false
         return users.removeIf(u -> u.getUid() == uid);
     }
 
+    /**
+     * Update a users name and password
+     * @param uid UserId
+     * @param username New Username
+     * @param passwd New Password
+     * @return update successful
+     */
     public boolean updUser(int uid, String username, String passwd)
     {
         //check for invalid input, when detected cancel operation
@@ -162,6 +209,12 @@ public class AuthService
         }
     }
 
+    /**
+     * Update a users name
+     * @param uid UserId
+     * @param username New Username
+     * @return update successful
+     */
     public boolean updUsername(int uid, String username)
     {
         //check for invalid input, when detected cancel operation
@@ -179,6 +232,12 @@ public class AuthService
         }
     }
 
+    /**
+     * Update a users password
+     * @param uid UserId
+     * @param password New Password
+     * @return update successful
+     */
     public boolean updPassword(int uid, String password)
     {
         //check for invalid input, when detected cancel operation
@@ -197,6 +256,12 @@ public class AuthService
         }
     }
 
+    /**
+     * Get User by UserId for external use
+     * @param uid UserId
+     * @return User
+     * @throws NoSuchElementException user not found
+     */
     public User getUserByUid(int uid) throws NoSuchElementException
     {
         /*
@@ -223,6 +288,12 @@ public class AuthService
     //endregion Private-Methods-1
 
 
+    /**
+     * helper method: Get User only providing username
+     * @param name username
+     * @return UserObject or throws Exception
+     * @throws NoSuchElementException user not found
+     */
     //region Private-Methods-2 (Hilfsmethoden)
     private User getUserByName(String name) throws NoSuchElementException
     {
@@ -236,6 +307,10 @@ public class AuthService
                 .orElseThrow();
     }
 
+    /**
+     * helper method: Generate a Random UserId for User-Creation
+     * @return userid
+     */
     private int generateUid()
     {
         boolean uidused=true;
@@ -253,12 +328,22 @@ public class AuthService
         return uid;
     }
 
+    /**
+     * helper method: Checks if any of the provided strings is null or empty
+     * @param strings strings to check
+     * @return string null or empty
+     */
     private boolean StringIsNullOrEmpty(String... strings)
     {
         //If any of the provided strings is null or empty -> return true
         return Arrays.stream(strings).anyMatch(s->s==null||s.isEmpty());
     }
 
+    /**
+     * helper method: validate usrname
+     * @param uname username
+     * @return username is valid
+     */
     private boolean isInvalidUsername(String uname)
     {
         //eventually implement username criteria
@@ -271,6 +356,11 @@ public class AuthService
         return users.parallelStream().anyMatch(u -> u.getUname().equals(uname));
     }
 
+    /**
+     * helper method: validate password
+     * @param passwd plaintext password
+     * @return password is valid
+     */
     private boolean isInvalidPassword(String passwd)
     {
         //eventually implement password criteria
@@ -279,6 +369,12 @@ public class AuthService
         return StringIsNullOrEmpty(passwd);
     }
 
+    /**
+     * helper method: Hashes a given password
+     * @param plainpw password in plaintext
+     * @return hashed password
+     * @throws NoSuchAlgorithmException invalid algorithm
+     */
     private String hashPasswd(String plainpw) throws NoSuchAlgorithmException
     {
         //hash plain password

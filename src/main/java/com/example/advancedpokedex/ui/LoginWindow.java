@@ -19,6 +19,10 @@ public class LoginWindow
     //Needed for editing local variable in lamda
     final AtomicReference<User> usrref = new AtomicReference<>();
 
+    /**
+     * Generates a login window and shows it
+     * @return UserObject with username-input,password-input
+     */
     public User showWindow()
     {
         User rtnUser=null;
