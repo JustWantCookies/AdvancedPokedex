@@ -104,10 +104,10 @@ public class AuthService
     }
 
     /**
-     * Shows Login-Window and create a user
+     * Add User with prompting for name and password
      * @return userid
      */
-    public int createUser()
+    public int addUserWithDlg()
     {
         try
         {
@@ -275,12 +275,21 @@ public class AuthService
     }
     //endregion Public-Methods
 
+
     //region Private-Methods-1
+    /** helper method: perform update on user object
+     * @param user UserObject
+     * @param username new username
+     */
     private void updUsername(User user, String username)
     {
         user.setUname(username);
     }
 
+    /** helper method: perform update on user object
+     * @param user UserObject
+     * @param hashedpw new password
+     */
     private void updPassword(User user, String hashedpw)
     {
         user.setPasswd(hashedpw);
