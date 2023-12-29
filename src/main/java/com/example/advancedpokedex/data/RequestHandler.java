@@ -1,4 +1,4 @@
-package com.example.adcancedpokedex.data;
+package com.example.advancedpokedex.data;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
