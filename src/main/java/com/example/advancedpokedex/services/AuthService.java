@@ -1,5 +1,6 @@
 package com.example.advancedpokedex.services;
 
+import com.example.advancedpokedex.data.AuthServiceDatabaseException;
 import com.example.advancedpokedex.data.User;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class AuthService
 
     final String FILENAME="users.json";
 
-    public AuthService()
+    public AuthService() throws AuthServiceDatabaseException
     {
         //Load Users from File, if file exits, and deserialize it
         try
@@ -40,7 +41,7 @@ public class AuthService
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            throw new AuthServiceDatabaseException(e.getMessage());
         }
 
     }
@@ -59,7 +60,8 @@ public class AuthService
         }
         catch (IOException e)
         {
-           //
+            //ignoring message in finalize
+           throw new AuthServiceDatabaseException();
         }
         finally
         {
@@ -151,7 +153,7 @@ public class AuthService
 
             return true;
         }
-        catch (Exception e)
+        catch (IndexOutOfBoundsException | NoSuchAlgorithmException excpt)
         {
             return false;
         }
@@ -188,6 +190,10 @@ public class AuthService
         {
             //store old values
             user = getUserByUid(uid);
+
+            if(user==null)
+                return false;
+
             oldUN = user.getUname();
             oldPW = user.getPasswd();
 
@@ -259,19 +265,18 @@ public class AuthService
     /**
      * Get User by UserId for external use
      * @param uid UserId
-     * @return User
-     * @throws NoSuchElementException user not found
+     * @return User or Null
      */
-    public User getUserByUid(int uid) throws NoSuchElementException
+    public User getUserByUid(int uid)
     {
         /*
         get user object and return it
-         or throw a NoSuchElementException
+         or returns null
         */
         return users.parallelStream()
                 .filter(u -> u.getUid() == uid)
                 .findAny()
-                .orElseThrow();
+                .orElse(null);
     }
     //endregion Public-Methods
 
@@ -300,27 +305,27 @@ public class AuthService
     /**
      * helper method: Get User only providing username
      * @param name username
-     * @return UserObject or throws Exception
-     * @throws NoSuchElementException user not found
+     * @return UserObject or Null
      */
     //region Private-Methods-2 (Hilfsmethoden)
-    private User getUserByName(String name) throws NoSuchElementException
+    private User getUserByName(String name)
     {
         /*
         get user object and return it
-         or throw a NoSuchElementException
+         or returns null
         */
         return users.parallelStream()
                 .filter(u -> u.getUname().equals(name))
                 .findAny()
-                .orElseThrow();
+                .orElse(null);
     }
 
     /**
      * helper method: Generate a Random UserId for User-Creation
      * @return userid
+     * @throws IndexOutOfBoundsException seed to big -> user limit reached
      */
-    private int generateUid()
+    private int generateUid() throws IndexOutOfBoundsException
     {
         boolean uidused=true;
         int uid=-1;
@@ -328,7 +333,11 @@ public class AuthService
         while (uidused)
         {
             //generate random uid
-            int randuid=random.nextInt(1000);
+
+            if((users.size()>=Integer.MAX_VALUE-1000))
+                throw new IndexOutOfBoundsException();
+
+            int randuid=random.nextInt(users.size()+10000);
 
             //check if uid already used -> no->return false, true=return true
             uidused=users.parallelStream().noneMatch(u->u.getUid()==randuid);
