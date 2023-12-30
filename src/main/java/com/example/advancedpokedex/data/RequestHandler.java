@@ -1,12 +1,13 @@
 package com.example.advancedpokedex.data;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
 
 public class RequestHandler {
 
-    public static String sendGetRequest(String urlString) {
+    public static String sendGetRequest(String urlString) throws NoInternetException {
         try {
             URL url = new URL(urlString);
 
@@ -29,8 +30,7 @@ public class RequestHandler {
 
             return inline.toString();
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            throw new NoInternetException("Unnable to send Request" + e.getMessage());
         }
     }
 }

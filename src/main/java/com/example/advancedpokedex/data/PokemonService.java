@@ -11,7 +11,7 @@ public class PokemonService {
     private static final String BASE_URL = "https://pokeapi.co/api/v2/pokemon/";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<Pokemon> loadAllPokemon() throws IOException {
+    public static List<Pokemon> loadAllPokemon() throws IOException, NoInternetException {
         List<Pokemon> allPokemon = new ArrayList<>();
         String nextUrl = BASE_URL;
 
