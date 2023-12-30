@@ -94,6 +94,9 @@ public class AuthService
             String pwLgn=hashPasswd(tmp.getPasswd());
             User user=getUserByName(tmp.getUname());
 
+            if(user==null)
+                return -1;
+
             if(user.getPasswd().equals(pwLgn))
                 return user.getUid(); //login successful -> return uid
             else
@@ -153,7 +156,7 @@ public class AuthService
 
             return true;
         }
-        catch (IndexOutOfBoundsException | NoSuchAlgorithmException excpt)
+        catch (IndexOutOfBoundsException | NoSuchAlgorithmException except)
         {
             return false;
         }
@@ -358,7 +361,7 @@ public class AuthService
     }
 
     /**
-     * helper method: validate usrname
+     * helper method: validate username
      * @param uname username
      * @return username is valid
      */
