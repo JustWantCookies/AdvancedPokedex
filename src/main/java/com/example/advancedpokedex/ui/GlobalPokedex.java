@@ -1,6 +1,6 @@
 package com.example.advancedpokedex.ui;
 
-import com.example.adcancedpokedex.data.Pokemon;
+import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.ui.internal.PokemonListCell;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
