@@ -1,9 +1,8 @@
 package com.example.advancedpokedex.ui.internal;
 
-import com.example.adcancedpokedex.data.Pokemon;
+import com.example.advancedpokedex.data.Pokemon;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 
 public class PokemonListCell extends ListCell<Pokemon> {
