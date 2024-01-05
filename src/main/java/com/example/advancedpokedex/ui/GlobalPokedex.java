@@ -1,22 +1,25 @@
 package com.example.advancedpokedex.ui;
 
 import com.example.advancedpokedex.data.Pokemon;
+import com.example.advancedpokedex.data.PokemonService;
 import com.example.advancedpokedex.ui.internal.PokemonListCell;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.EventHandler;
+import javafx.concurrent.Task;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class GlobalPokedex extends Application {
@@ -25,55 +28,42 @@ public class GlobalPokedex extends Application {
     public static final int WINDOW_HEIGHT = 500;
 
     private Stage mainStage;
-
     private Scene overViewScene;
+    private final PokemonService pokemonService = new PokemonService();
+    private final ObservableList<Pokemon> pokemonList = FXCollections.observableArrayList();
 
     @Override
     public void start(Stage stage) {
         mainStage = stage;
-        overViewScene = this.buildOverviewScene(navigateToDetailPage());
+        overViewScene = buildOverviewScene();
 
         mainStage.setTitle("Global Pokedex!");
         mainStage.setScene(overViewScene);
         mainStage.show();
+
+        loadPokemonData();
     }
 
-    private Consumer<Pokemon> navigateToDetailPage() {
-        return pokemon -> {
-            mainStage.setScene(this.buildDetailScene(pokemon));
-            mainStage.show();
-        };
-    }
-
-    private EventHandler<MouseEvent> navigateToOverviewPage() {
-        return event -> mainStage.setScene(overViewScene);
-    }
-
-    private Scene buildOverviewScene(Consumer<Pokemon> onDetailClick) {
+    private Scene buildOverviewScene() {
         BorderPane pane = new BorderPane();
         TextField searchField = new TextField();
-
-        List<Pokemon> pokemonList = new ArrayList<>();
-        FilteredList<Pokemon> filteredData = new FilteredList<>(FXCollections.observableArrayList(pokemonList), p -> true);
+        FilteredList<Pokemon> filteredData = new FilteredList<>(pokemonList, p -> true);
         ListView<Pokemon> listViewPokemon = new ListView<>(filteredData);
         listViewPokemon.setCellFactory(param -> new PokemonListCell());
 
         searchField.setPromptText("Search your Pokemon here!");
 
-        //TODO Remove and get Real Data
-        addTestData(pokemonList);
-
         listViewPokemon.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
                 Pokemon selectedPokemon = listViewPokemon.getSelectionModel().getSelectedItem();
                 if (selectedPokemon != null) {
-                    onDetailClick.accept(selectedPokemon);
+                    navigateToDetailPage(selectedPokemon);
                 }
             }
         });
 
         searchField.textProperty().addListener((observable, oldValue, newValue) ->
-            filteredData.setPredicate(pokemon -> newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()))
+                filteredData.setPredicate(pokemon -> newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()))
         );
 
         pane.setTop(searchField);
@@ -81,23 +71,74 @@ public class GlobalPokedex extends Application {
         return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
+    private void navigateToDetailPage(Pokemon pokemon) {
+        Scene detailScene = buildDetailScene(pokemon);
+        mainStage.setScene(detailScene);
+        mainStage.show();
+    }
+
     private Scene buildDetailScene(Pokemon pokemon) {
         BorderPane pane = new BorderPane();
-        TextField test = new TextField();
-        Button backButton = new Button();
+        Label name = new Label();
+        ImageView imageView = new ImageView();
+        VBox vBox = new VBox();
+        Button backButton = new Button("Back");
 
-        backButton.setOnMouseClicked(navigateToOverviewPage());
-        test.setText(pokemon.getName());
+        name.setStyle("-fx-font-size: 30px; -fx-padding: 10px;");
 
-        pane.setCenter(test);
-        pane.setTop(backButton);
+        loadPokemonDataDetail(pokemon, p -> imageView.setImage(new Image(p.getSprites().getFrontDefault())));
+
+        imageView.setImage(new Image("default.jpg"));
+        imageView.setFitWidth(350);
+        imageView.setPreserveRatio(true);
+
+        backButton.setOnAction(event -> mainStage.setScene(overViewScene));
+        name.setText(pokemon.getName());
+
+        vBox.getChildren().add(backButton);
+        vBox.getChildren().add(name);
+
+        pane.setCenter(imageView);
+        pane.setTop(vBox);
 
         return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
-    private void addTestData(List<Pokemon> pokemonList){
-        pokemonList.add(new Pokemon("Glumanda", 1));
-        pokemonList.add(new Pokemon("Arceus", 100));
-        pokemonList.add(new Pokemon("Zekrom", 50));
+    private void loadPokemonDataDetail(Pokemon pokemon, Consumer<Pokemon> callback) {
+        Task<Pokemon> loadPokemonTask = new Task<>() {
+            @Override
+            protected Pokemon call() throws Exception {
+                return pokemonService.getPokemonDetail(pokemon.getDetailURL());
+            }
+        };
+        Thread thread = new Thread(loadPokemonTask);
+        thread.setDaemon(true);
+        thread.start();
+
+        loadPokemonTask.setOnSucceeded(event -> {
+            callback.accept(loadPokemonTask.getValue());
+        });
+    }
+
+    private void loadPokemonData() {
+        Task<List<Pokemon>> loadPokemonTask = new Task<>() {
+            @Override
+            protected List<Pokemon> call() throws Exception {
+                return pokemonService.getPokemons();
+            }
+        };
+
+        loadPokemonTask.setOnSucceeded(event -> {
+            List<Pokemon> loadedData = loadPokemonTask.getValue();
+            pokemonList.addAll(loadedData);
+        });
+
+        Thread thread = new Thread(loadPokemonTask);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

@@ -8,10 +8,11 @@ import java.util.List;
 
 public class PokemonService {
 
-    private static final String BASE_URL = "https://pokeapi.co/api/v2/pokemon/";
+    //Maybe change Limit
+    private static final String BASE_URL = "https://pokeapi.co/api/v2/pokemon/?offset=0&limit=1300";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<Pokemon> loadAllPokemon() throws IOException, NoInternetException {
+    public List<Pokemon> getPokemons() throws IOException, NoInternetException {
         List<Pokemon> allPokemon = new ArrayList<>();
         String nextUrl = BASE_URL;
 
@@ -23,10 +24,17 @@ public class PokemonService {
 
             for (JsonNode resultNode : resultsNode) {
                 String pokemonUrl = resultNode.path("url").asText();
-                Pokemon pokemon = PokemonApi.getPokemonDetails(pokemonUrl);
+                //Takes much too long
+                //Pokemon pokemon = PokemonApi.getPokemonDetails(pokemonUrl);
+                Pokemon pokemon = new Pokemon(resultNode.path("name").asText(), pokemonUrl);
                 allPokemon.add(pokemon);
             }
         }
         return allPokemon;
     }
+
+    public Pokemon getPokemonDetail(String url) throws IOException, NoInternetException {
+       return PokemonApi.getPokemonDetails(url);
+    }
+
 }

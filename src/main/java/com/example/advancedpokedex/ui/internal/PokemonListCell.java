@@ -27,8 +27,11 @@ public class PokemonListCell extends ListCell<Pokemon> {
             detail.setText(null);
             setGraphic(null);
         } else {
+
+
             title.setText(pokemon.getName());
-            detail.setText("Level: " + pokemon.getLevel());
+            //detail.setText("Level: " + pokemon.ge());
+
 
             /* TODO Remove
             setOnMouseClicked(event -> {
