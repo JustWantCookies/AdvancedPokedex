@@ -6,7 +6,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.layout.VBox;
 
 public class PokemonListCell extends ListCell<Pokemon> {
-    //TODO remake the design of this class
     private final Label title = new Label();
     private final Label detail = new Label();
     private final VBox layout = new VBox(title, detail);
@@ -30,16 +29,6 @@ public class PokemonListCell extends ListCell<Pokemon> {
 
 
             title.setText(pokemon.getName());
-            //detail.setText("Level: " + pokemon.ge());
-
-
-            /* TODO Remove
-            setOnMouseClicked(event -> {
-                if (event.getButton() == MouseButton.PRIMARY) {
-                    System.out.println("Selected Pokemon: " + pokemon.getName());
-                }
-            });
-             */
 
             setGraphic(layout);
         }
