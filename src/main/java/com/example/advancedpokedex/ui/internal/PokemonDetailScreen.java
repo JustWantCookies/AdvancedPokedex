@@ -25,7 +25,7 @@ public class PokemonDetailScreen {
         this.overviewScene = overviewScene;
     }
 
-    public Scene buildDetailScene(Pokemon pokemon) {
+    public BorderPane buildDetailScene(Pokemon pokemon) {
         BorderPane pane = new BorderPane();
         Label name = new Label();
         ImageView imageView = new ImageView();
@@ -58,7 +58,7 @@ public class PokemonDetailScreen {
         pane.setRight(rightVbox);
         pane.setLeft(leftVbox);
 
-        return new Scene(pane, GlobalPokedex.WINDOW_WIDTH, GlobalPokedex.WINDOW_HEIGHT);
+        return pane;
     }
 
     private Node createPokemonStatNode(PokemonStat pokemonStat) {

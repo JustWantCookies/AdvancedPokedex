@@ -1,6 +1,9 @@
 package com.example.advancedpokedex.ui;
 
-import com.example.advancedpokedex.data.*;
+import com.example.advancedpokedex.data.Pokemon;
+import com.example.advancedpokedex.data.PokemonService;
+import com.example.advancedpokedex.data.TypeApi;
+import com.example.advancedpokedex.ui.internal.GlobalPokedexServerRunnable;
 import com.example.advancedpokedex.ui.internal.PokemonDetailScreen;
 import com.example.advancedpokedex.ui.internal.PokemonListCell;
 import javafx.application.Application;
@@ -8,54 +11,55 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class GlobalPokedex extends Application {
 
-    public static final int WINDOW_WIDTH = 600;
-    public static final int WINDOW_HEIGHT = 500;
+    protected static final int WINDOW_WIDTH = 600;
+    protected static final int WINDOW_HEIGHT = 500;
 
-    private Stage mainStage;
-    private Scene overViewScene;
-    private final PokemonService pokemonService = new PokemonService();
-    private final TypeApi typeApi = new TypeApi();
-    private final ObservableList<Pokemon> pokemonList = FXCollections.observableArrayList();
+    protected Stage mainStage;
+    protected Scene overViewScene;
+    protected final PokemonService pokemonService = new PokemonService();
+    protected final TypeApi typeApi = new TypeApi();
+    protected final ObservableList<Pokemon> pokemonList = FXCollections.observableArrayList();
 
-    private PokemonDetailScreen detailScreen; // Reference to PokemonDetailScreen
+    protected PokemonDetailScreen detailScreen;
 
     @Override
     public void start(Stage stage) {
         mainStage = stage;
-        overViewScene = buildOverviewScene();
+        overViewScene = new Scene(buildOverviewScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
         detailScreen = new PokemonDetailScreen(mainStage, overViewScene); // Initialize the detailScreen
 
-        mainStage.setTitle("Global Pokedex!");
+        mainStage.setTitle("Pokedex!");
         mainStage.setScene(overViewScene);
         mainStage.show();
 
         loadPokemonDataDetails();
+
+        int serverPort = 12345; // Choose a port number
+        GlobalPokedexServerRunnable serverRunnable = new GlobalPokedexServerRunnable(serverPort, this);
+        Thread serverThread = new Thread(serverRunnable);
+        serverThread.setDaemon(true);
+        serverThread.start();
     }
 
-    private Scene buildOverviewScene() {
+    protected BorderPane buildOverviewScene() {
         BorderPane pane = new BorderPane();
         TextField searchField = new TextField();
         FilteredList<Pokemon> filteredData = new FilteredList<>(pokemonList, p -> true);
         ListView<Pokemon> listViewPokemon = new ListView<>(filteredData);
-        listViewPokemon.setCellFactory(param -> new PokemonListCell());
+        setListFactory(listViewPokemon);
         ComboBox<String> typeFilterComboBox = new ComboBox<>();
         typeFilterComboBox.setPromptText("Select type filter");
         loadPokemonTypesAsync(typeFilterComboBox);
@@ -90,16 +94,24 @@ public class GlobalPokedex extends Application {
         pane.setTop(filterBox);
 
         pane.setCenter(listViewPokemon);
-        return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
+        return pane;
+    }
+
+    protected void setListFactory(ListView<Pokemon> listViewPokemon) {
+        listViewPokemon.setCellFactory(param -> new PokemonListCell());
     }
 
     private void navigateToDetailPage(Pokemon pokemon) {
-        Scene detailScene = detailScreen.buildDetailScene(pokemon); // Use the PokemonDetailScreen
+        Scene detailScene = new Scene(buildDetailScreen(pokemon), GlobalPokedex.WINDOW_WIDTH, GlobalPokedex.WINDOW_HEIGHT);
         mainStage.setScene(detailScene);
         mainStage.show();
     }
 
-    private void loadPokemonDataDetails() {
+    protected BorderPane buildDetailScreen(Pokemon pokemon){
+        return detailScreen.buildDetailScene(pokemon);
+    }
+
+    protected void loadPokemonDataDetails() {
         Task<List<Pokemon>> loadPokemonTask = new Task<>() {
             @Override
             protected List<Pokemon> call() throws Exception {
