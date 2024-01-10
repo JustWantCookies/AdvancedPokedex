@@ -11,6 +11,16 @@ public class Pokemon {
     private List<PokemonType> types;
     private List<PokemonStat> stats;
 
+    private String detailURL;
+
+    public String getDetailURL() {
+        return detailURL;
+    }
+
+    public void setDetailURL(String detailURL) {
+        this.detailURL = detailURL;
+    }
+
     // Getter und Setter
     public String getName() {
         return name;
@@ -39,8 +49,18 @@ public class Pokemon {
     public void setStats(List<PokemonStat> stats) {
         this.stats = stats;
     }
+
+    public void setDetails(Pokemon pokemon){
+        this.types = pokemon.types;
+        this.stats = pokemon.stats;
+        this.sprites = pokemon.sprites;
+    }
     public Pokemon(){
 
+    }
+    public Pokemon(String name, String url){
+        this.name = name;
+        this.detailURL = url;
     }
 
     public Pokemon (String name, Sprites sprites, List<PokemonType> types, List<PokemonStat> stats){

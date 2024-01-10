@@ -3,21 +3,26 @@ package com.example.advancedpokedex.ui.internal;
 import com.example.advancedpokedex.data.Pokemon;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.RadioButton;
+import javafx.scene.layout.HBox;
 
-public class PokemonListCell extends ListCell<Pokemon> {
+public class PokemonListCellPrivate extends ListCell<Pokemon> {
     private final Label title = new Label();
     private final Label detail = new Label();
-    private final VBox layout = new VBox(title, detail);
+    private final Label detail2 = new Label();
 
-    public PokemonListCell() {
+    private final RadioButton catched = new RadioButton();
+    private final RadioButton shiny = new RadioButton();
+    private final HBox layout = new HBox(title, detail, catched, detail2, shiny);
+
+    public PokemonListCellPrivate() {
         super();
         title.setStyle("-fx-font-size: 20px;");
     }
 
     /**
      * Customizes the rendering of a single item in a ListView cell for displaying Pokemon data.
-     * Updates the cell's content to show the Pokemon's name.
+     * Updates the cell's content to show the Pokemon's name and whether it is a favorite.
      *
      * @param pokemon The Pokemon object to be displayed in the cell.
      * @param empty   A boolean indicating whether the cell should be empty.
@@ -34,8 +39,8 @@ public class PokemonListCell extends ListCell<Pokemon> {
             setGraphic(null);
         } else {
 
-
             title.setText(pokemon.getName());
+            detail.setText("Is Favourite: ");
 
             setGraphic(layout);
         }

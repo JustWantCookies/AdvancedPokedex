@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties({"url"})
-public class TypeReference {
+public class TypeDetail {
     @JsonProperty("name")
     private String name;
 

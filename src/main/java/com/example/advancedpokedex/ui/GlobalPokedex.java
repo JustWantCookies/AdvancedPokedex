@@ -1,103 +1,280 @@
 package com.example.advancedpokedex.ui;
 
 import com.example.advancedpokedex.data.Pokemon;
+import com.example.advancedpokedex.data.PokemonService;
+import com.example.advancedpokedex.data.PokemonStat;
+import com.example.advancedpokedex.data.TypeApi;
+import com.example.advancedpokedex.data.pojo.Note;
+import com.example.advancedpokedex.services.NoteService;
+import com.example.advancedpokedex.ui.internal.GlobalPokedexServerRunnable;
+import com.example.advancedpokedex.ui.internal.PokemonDetailScreen;
 import com.example.advancedpokedex.ui.internal.PokemonListCell;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.event.EventHandler;
+import javafx.concurrent.Task;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Objects;
 
+/**
+ * A ui class for showing GlobalPokedex.
+ */
 public class GlobalPokedex extends Application {
 
-    public static final int WINDOW_WIDTH = 1000;
-    public static final int WINDOW_HEIGHT = 500;
+    protected static final int WINDOW_WIDTH = 600;
+    protected static final int WINDOW_HEIGHT = 500;
 
-    private Stage mainStage;
+    protected static final String NOTE_PATH = "notes.txt";
 
-    private Scene overViewScene;
+    protected Stage mainStage;
+    protected Scene overViewScene;
+    protected final PokemonService pokemonService = new PokemonService();
+    protected final TypeApi typeApi = new TypeApi();
 
+    protected final NoteService noteService = new NoteService(NOTE_PATH);
+    protected final ObservableList<Pokemon> pokemonList = FXCollections.observableArrayList();
+
+    protected PokemonDetailScreen detailScreen;
+
+    /**
+     * Initializes and starts the Pokedex application by setting up the main stage,
+     * loading Pokemon data, initializing the detail screen, and starting the server thread.
+     *
+     * @param stage The primary stage for the Pokedex application.
+     */
     @Override
     public void start(Stage stage) {
         mainStage = stage;
-        overViewScene = this.buildOverviewScene(navigateToDetailPage());
+        overViewScene = new Scene(buildOverviewScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        detailScreen = new PokemonDetailScreen(mainStage, overViewScene); // Initialize the detailScreen
 
-        mainStage.setTitle("Global Pokedex!");
+        mainStage.setTitle("Pokedex!");
         mainStage.setScene(overViewScene);
         mainStage.show();
+
+        loadPokemonDataDetails();
+
+        int serverPort = 12345; // Choose a port number
+        GlobalPokedexServerRunnable serverRunnable = new GlobalPokedexServerRunnable(serverPort);
+        Thread serverThread = new Thread(serverRunnable);
+        serverThread.setDaemon(true);
+        serverThread.start();
     }
 
-    private Consumer<Pokemon> navigateToDetailPage() {
-        return pokemon -> {
-            mainStage.setScene(this.buildDetailScene(pokemon));
-            mainStage.show();
-        };
-    }
-
-    private EventHandler<MouseEvent> navigateToOverviewPage() {
-        return event -> mainStage.setScene(overViewScene);
-    }
-
-    private Scene buildOverviewScene(Consumer<Pokemon> onDetailClick) {
+    /**
+     * Builds and returns the overview scene for displaying a list of Pokemon.
+     * This scene includes a search field, a type filter combo box, and a ListView for displaying the Pokemon.
+     *
+     * @return A BorderPane containing the overview scene.
+     */
+    protected BorderPane buildOverviewScene() {
         BorderPane pane = new BorderPane();
         TextField searchField = new TextField();
-
-        List<Pokemon> pokemonList = new ArrayList<>();
-        FilteredList<Pokemon> filteredData = new FilteredList<>(FXCollections.observableArrayList(pokemonList), p -> true);
+        FilteredList<Pokemon> filteredData = new FilteredList<>(pokemonList, p -> true);
         ListView<Pokemon> listViewPokemon = new ListView<>(filteredData);
-        listViewPokemon.setCellFactory(param -> new PokemonListCell());
+        setListFactory(listViewPokemon);
+        ComboBox<String> typeFilterComboBox = new ComboBox<>();
+        typeFilterComboBox.setPromptText("Select type filter");
+        loadPokemonTypesAsync(typeFilterComboBox);
+        typeFilterComboBox.getItems().add("All");
+
+        ComboBox<String> statCriteriaComboBox = new ComboBox<>();
+        statCriteriaComboBox.setPromptText("Select stat criteria");
+        statCriteriaComboBox.getItems().addAll("HP", "Attack", "Defense", "Special-Attack", "Special-Defense", "Speed"); // Add more as needed
+        TextField statValueField = new TextField();
+        statValueField.setPromptText("Enter stat value");
 
         searchField.setPromptText("Search your Pokemon here!");
-
-        //TODO Remove and get Real Data
-        addTestData(pokemonList);
 
         listViewPokemon.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
                 Pokemon selectedPokemon = listViewPokemon.getSelectionModel().getSelectedItem();
                 if (selectedPokemon != null) {
-                    onDetailClick.accept(selectedPokemon);
+                    navigateToDetailPage(selectedPokemon);
                 }
             }
         });
 
         searchField.textProperty().addListener((observable, oldValue, newValue) ->
-            filteredData.setPredicate(pokemon -> newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()))
+                filteredData.setPredicate(pokemon ->
+                        (newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()))
+                                && (typeFilterComboBox.getSelectionModel().isEmpty() ||
+                                isValidStat(pokemon, statCriteriaComboBox.getValue(), statValueField.getText()) ||
+                                newValue.equals("All") || pokemon.getTypes().stream().anyMatch(t -> t.getType().getName().contains(newValue)))
+                )
         );
 
-        pane.setTop(searchField);
+        typeFilterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
+                filteredData.setPredicate(pokemon ->
+                        (searchField.getText().isEmpty() || pokemon.getName().toLowerCase().contains(searchField.getText().toLowerCase()))
+                                && (newValue == null || newValue.equals("All") || pokemon.getTypes().stream().anyMatch(t -> t.getType().getName().contains(newValue)))
+                )
+        );
+
+        statCriteriaComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
+                filteredData.setPredicate(pokemon ->
+                        (searchField.getText().isEmpty() || pokemon.getName().toLowerCase().contains(searchField.getText().toLowerCase()))
+                                && (typeFilterComboBox.getSelectionModel().isEmpty() || newValue.equals("All") || pokemon.getTypes().stream().anyMatch(t -> t.getType().getName().contains(newValue)))
+                                && (newValue == null || isValidStat(pokemon, newValue, statValueField.getText()))
+                )
+        );
+
+        VBox statFilterBox = new VBox(statCriteriaComboBox, statValueField);
+        statFilterBox.setSpacing(10);
+
+        HBox filterBox = new HBox(statFilterBox, searchField, typeFilterComboBox);
+        filterBox.setSpacing(10);
+        pane.setTop(filterBox);
+
         pane.setCenter(listViewPokemon);
-        return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
+        return pane;
     }
 
-    private Scene buildDetailScene(Pokemon pokemon) {
-        BorderPane pane = new BorderPane();
-        TextField test = new TextField();
-        Button backButton = new Button();
+    /**
+     * Checks if a given Pokémon's stat meets the specified criteria and value.
+     *
+     * @param pokemon  The Pokémon whose stat is being checked.
+     * @param criteria The stat criteria to be used for filtering (e.g., "HP", "Attack", "Defense", "Speed").
+     * @param value    The desired stat value to compare against.
+     * @return {@code true} if the Pokémon's stat meets the criteria and value, {@code false} otherwise.
+     */
+    private boolean isValidStat(Pokemon pokemon, String criteria, String value) {
+        if (criteria == null || value.isEmpty()) {
+            return true;
+        }
 
-        backButton.setOnMouseClicked(navigateToOverviewPage());
-        test.setText(pokemon.getName());
+        int statValue;
+        try {
+            statValue = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return false; // Invalid input
+        }
 
-        pane.setCenter(test);
-        pane.setTop(backButton);
-
-        return new Scene(pane, WINDOW_WIDTH, WINDOW_HEIGHT);
+        for(PokemonStat stat : pokemon.getStats()){
+            if(Objects.equals(stat.getStatName().getStatName(), criteria.toLowerCase())){
+                return stat.getBaseStat() >= statValue;
+            }
+        }
+        return false;
     }
 
-    private void addTestData(List<Pokemon> pokemonList){
-        pokemonList.add(new Pokemon("Glumanda", 1));
-        pokemonList.add(new Pokemon("Arceus", 100));
-        pokemonList.add(new Pokemon("Zekrom", 50));
+    /**
+     * Sets the cell factory for a ListView of Pokemon, allowing custom rendering of each item.
+     *
+     * @param listViewPokemon The ListView to set the cell factory for.
+     */
+    protected void setListFactory(ListView<Pokemon> listViewPokemon) {
+        listViewPokemon.setCellFactory(param -> new PokemonListCell());
+    }
+
+    /**
+     * Navigates to the detail page for a specific Pokemon, displaying its detailed information.
+     *
+     * @param pokemon The Pokemon object for which to navigate to the detail page.
+     */
+    private void navigateToDetailPage(Pokemon pokemon) {
+        Scene detailScene = new Scene(buildDetailScreen(pokemon), GlobalPokedex.WINDOW_WIDTH, GlobalPokedex.WINDOW_HEIGHT);
+        mainStage.setScene(detailScene);
+        mainStage.show();
+    }
+
+    /**
+     * Builds and returns the detail screen for a specific Pokemon, which includes its detailed information.
+     *
+     * @param pokemon The Pokemon object for which to build the detail screen.
+     * @return A BorderPane containing the detail screen for the specified Pokemon.
+     */
+    protected BorderPane buildDetailScreen(Pokemon pokemon){
+        BorderPane pane = detailScreen.buildDetailScene(pokemon);
+
+        TextArea textArea = new TextArea();
+        Button reloadButton = new Button("Reload Comments");
+
+        textArea.appendText(getNotesFromPokemonAsString(pokemon));
+
+        reloadButton.setOnMouseClicked(mouseEvent -> textArea.setText(getNotesFromPokemonAsString(pokemon)));
+
+        pane.setBottom(new VBox(reloadButton, textArea));
+
+        return pane;
+    }
+
+    /**
+     * Retrieves and formats public notes from other users associated with a specific Pokemon as a string.
+     *
+     * @param pokemon The Pokemon for which to retrieve and format public notes.
+     * @return A formatted string containing public notes from other users for the specified Pokemon.
+     */
+    protected String getNotesFromPokemonAsString(Pokemon pokemon) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<Note> notes = noteService.readAllNotesForPokemon(pokemon.getName());
+        for (Note note : notes) {
+            if(!note.isPublic())
+                continue;
+            String username = "Unknown";
+            if(note.getAuthor() != null)
+                username = note.getAuthor().getUname();
+
+            stringBuilder.append(username).append(": ").append(note.getContent()).append("\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Loads detailed Pokemon data asynchronously and populates the Pokemon list with the retrieved data.
+     * This method creates a background task to fetch Pokemon details from a service.
+     */
+    protected void loadPokemonDataDetails() {
+        Task<List<Pokemon>> loadPokemonTask = new Task<>() {
+            @Override
+            protected List<Pokemon> call() throws Exception {
+                return pokemonService.getPokemonsDetalis();
+            }
+        };
+
+        loadPokemonTask.setOnSucceeded(event -> {
+            List<Pokemon> loadedData = loadPokemonTask.getValue();
+            pokemonList.addAll(loadedData);
+        });
+
+        Thread thread = new Thread(loadPokemonTask);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    /**
+     * Loads Pokemon types asynchronously and populates the provided ComboBox with the retrieved types.
+     *
+     * @param typeFilterComboBox The ComboBox to populate with Pokemon types.
+     */
+    private void loadPokemonTypesAsync(ComboBox<String> typeFilterComboBox) {
+        Task<List<String>> loadTypesTask = new Task<>() {
+            @Override
+            protected List<String> call() throws Exception {
+                return typeApi.getTypes();
+            }
+        };
+
+        loadTypesTask.setOnSucceeded(event -> {
+            List<String> types = loadTypesTask.getValue();
+            typeFilterComboBox.getItems().addAll(types);
+        });
+
+        Thread thread = new Thread(loadTypesTask);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

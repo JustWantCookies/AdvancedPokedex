@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties({"slot"})
 public class PokemonType {
     @JsonProperty("type")
-    private TypeReference type;
+    private TypeDetail type;
 
-    public TypeReference getType() {
+    public TypeDetail getType() {
         return type;
     }
 
-    public void setType(TypeReference type) {
+    public void setType(TypeDetail type) {
         this.type = type;
     }
 }
