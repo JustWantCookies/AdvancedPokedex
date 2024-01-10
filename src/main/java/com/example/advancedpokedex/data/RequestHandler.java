@@ -1,11 +1,14 @@
 package com.example.advancedpokedex.data;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
 
 public class RequestHandler {
+
+    private RequestHandler(){
+
+    }
 
     /**
      * Sends a GET request to a specified URL and retrieves the response as a string.
@@ -15,6 +18,7 @@ public class RequestHandler {
      * @throws NoInternetException  if there is no internet connection or the URL is unreachable.
      */
     public static String sendGetRequest(String urlString) throws NoInternetException {
+        //TODO refactor Exceptions here
         try {
             URL url = new URL(urlString);
 
@@ -24,6 +28,7 @@ public class RequestHandler {
 
             int responseCode = connection.getResponseCode();
             if (responseCode != 200) {
+                //TODO
                 throw new RuntimeException("HttpResponseCode: " + responseCode);
             }
 

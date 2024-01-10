@@ -3,7 +3,6 @@ package com.example.advancedpokedex.ui.internal;
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.PokemonStat;
 import com.example.advancedpokedex.data.PokemonType;
-import com.example.advancedpokedex.ui.GlobalPokedex;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;

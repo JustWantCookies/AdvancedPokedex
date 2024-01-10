@@ -3,6 +3,9 @@ package com.example.advancedpokedex.ui;
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.PokemonService;
 import com.example.advancedpokedex.data.TypeApi;
+import com.example.advancedpokedex.data.User;
+import com.example.advancedpokedex.data.pojo.Note;
+import com.example.advancedpokedex.services.NoteService;
 import com.example.advancedpokedex.ui.internal.GlobalPokedexServerRunnable;
 import com.example.advancedpokedex.ui.internal.PokemonDetailScreen;
 import com.example.advancedpokedex.ui.internal.PokemonListCell;
@@ -12,25 +15,31 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.List;
 
+/**
+ * A ui class for showing GlobalPokedex.
+ */
 public class GlobalPokedex extends Application {
 
     protected static final int WINDOW_WIDTH = 600;
     protected static final int WINDOW_HEIGHT = 500;
 
+    protected static final String NOTE_PATH = "notes.txt";
+
     protected Stage mainStage;
     protected Scene overViewScene;
     protected final PokemonService pokemonService = new PokemonService();
     protected final TypeApi typeApi = new TypeApi();
+
+    protected final NoteService noteService = new NoteService(NOTE_PATH);
     protected final ObservableList<Pokemon> pokemonList = FXCollections.observableArrayList();
 
     protected PokemonDetailScreen detailScreen;
@@ -136,7 +145,39 @@ public class GlobalPokedex extends Application {
      * @return A BorderPane containing the detail screen for the specified Pokemon.
      */
     protected BorderPane buildDetailScreen(Pokemon pokemon){
-        return detailScreen.buildDetailScene(pokemon);
+        BorderPane pane = detailScreen.buildDetailScene(pokemon);
+
+        TextArea textArea = new TextArea();
+        Button reloadButton = new Button("Reload Comments");
+
+        textArea.appendText(getNotesFromPokemonAsString(pokemon));
+
+        reloadButton.setOnMouseClicked(mouseEvent -> textArea.setText(getNotesFromPokemonAsString(pokemon)));
+
+        pane.setBottom(new VBox(reloadButton, textArea));
+
+        return pane;
+    }
+
+    /**
+     * Retrieves and formats public notes from other users associated with a specific Pokemon as a string.
+     *
+     * @param pokemon The Pokemon for which to retrieve and format public notes.
+     * @return A formatted string containing public notes from other users for the specified Pokemon.
+     */
+    protected String getNotesFromPokemonAsString(Pokemon pokemon) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<Note> notes = noteService.readAllNotesForPokemon(pokemon.getName());
+        for (Note note : notes) {
+            if(!note.isPublic())
+                continue;
+            String username = "Unknown";
+            if(note.getAuthor() != null)
+                username = note.getAuthor().getUname();
+
+            stringBuilder.append(username).append(": ").append(note.getContent()).append("\n");
+        }
+        return stringBuilder.toString();
     }
 
     /**

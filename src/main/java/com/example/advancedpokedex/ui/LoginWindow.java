@@ -59,6 +59,7 @@ public class LoginWindow
         {
            //Source: https://stackoverflow.com/questions/34865383/variable-used-in-lambda-expression-should-be-final-or-effectively-final
            usrref.set(new User(0,userInpt.getText(),pwInbt.getText()));
+           stage.close();
         });
 
         Button btnCancel = new Button("Cancel");

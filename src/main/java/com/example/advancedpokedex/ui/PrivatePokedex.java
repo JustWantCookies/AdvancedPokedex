@@ -3,6 +3,7 @@ package com.example.advancedpokedex.ui;
 import com.example.advancedpokedex.data.AuthServiceDatabaseException;
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.User;
+import com.example.advancedpokedex.data.pojo.Note;
 import com.example.advancedpokedex.services.AuthService;
 import com.example.advancedpokedex.ui.internal.PokemonDetailScreen;
 import com.example.advancedpokedex.ui.internal.PokemonListCellPrivate;
@@ -13,15 +14,17 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.List;
 import java.util.Optional;
 
+/**
+ * A ui class for showing PrivatPokedex.
+ */
 public class PrivatePokedex extends GlobalPokedex {
-
+    PrivatePokedexClient client = new PrivatePokedexClient();
     private User user;
 
-    PrivatePokedexClient client = new PrivatePokedexClient();
-
-
+    private Scene authScene;
     private AuthService authService;
 
     public PrivatePokedex() {
@@ -41,21 +44,39 @@ public class PrivatePokedex extends GlobalPokedex {
         mainStage = stage;
         overViewScene = new Scene(buildOverviewScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
         detailScreen = new PokemonDetailScreen(mainStage, overViewScene); // Initialize the detailScreen
+        authScene = new Scene(buildAuthScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
+
         try {
             authService = new AuthService();
         } catch (AuthServiceDatabaseException e) {
-            authService = null;
-        }
-
-        if(authService != null){
-          //  authService.addUserWithDlg();
+            //TODO
         }
 
         mainStage.setTitle("Pokedex!");
-        mainStage.setScene(overViewScene);
+        mainStage.setScene(authScene);
         mainStage.show();
 
         loadPokemonDataDetails();
+    }
+
+    private BorderPane buildAuthScene() {
+        BorderPane pane = new BorderPane();
+        Button login = new Button("Login");
+        Button register = new Button("Register");
+
+        login.setOnMouseClicked(mouseEvent -> {
+            user = authService.getUserByUid(authService.performLogon());
+            if (user != null) {
+                mainStage.setScene(overViewScene);
+                mainStage.show();
+            }
+        });
+
+        register.setOnMouseClicked(e -> authService.addUserWithDlg());
+
+        pane.setCenter(new VBox(login, register));
+
+        return pane;
     }
 
     /**
@@ -68,17 +89,35 @@ public class PrivatePokedex extends GlobalPokedex {
     @Override
     protected BorderPane buildDetailScreen(Pokemon pokemon) {
         BorderPane detailScene = super.buildDetailScreen(pokemon); // Call the parent's buildDetailScene method
-        TextArea textArea = new TextArea();
-
-        //GET ALL COMMENTS
-        textArea.appendText("USER1: dummy \nUSER2: dummy2");
 
         Button commentButton = new Button("Add Comment");
         commentButton.setOnAction(event -> addComment(pokemon));
 
-        detailScene.setBottom(new VBox(commentButton, textArea));
+        detailScene.setBottom(new VBox(commentButton, detailScene.getBottom()));
 
         return detailScene;
+    }
+
+    /**
+     * Retrieves and formats public notes from other users associated with a specific Pokemon as a string.
+     *
+     * @param pokemon The Pokemon for which to retrieve and format public notes.
+     * @return A formatted string containing public notes from other users for the specified Pokemon.
+     */
+    @Override
+    protected String getNotesFromPokemonAsString(Pokemon pokemon) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<Note> notes = noteService.readAllNotesForPokemon(pokemon.getName());
+        for (Note note : notes) {
+            if (!note.isPublic() || note.getAuthor() != user)
+                continue;
+            String username = "Unknown";
+            if (note.getAuthor() != null)
+                username = note.getAuthor().getUname();
+
+            stringBuilder.append(username).append(": ").append(note.getContent()).append("\n");
+        }
+        return stringBuilder.toString();
     }
 
     /**
@@ -106,13 +145,8 @@ public class PrivatePokedex extends GlobalPokedex {
 
             commentResult.ifPresent(comment -> {
                 client.sendMessage("COMMENT MADE -> " + comment);
-            if (visibility.equals("Public")) {
-                    // Handle public comment
-                    // You can implement your own data storage and handling mechanism
-                } else if (visibility.equals("Private")) {
-                    // Handle private comment
-                    // You can implement your own data storage and handling mechanism
-                }
+                noteService.writeNoteForPokemon(pokemon.getName(), comment, user, visibility.equals("Public"));
+
                 showAlert("Comment Added", visibility + " comment for " + pokemon.getName() + " added successfully.");
             });
         });

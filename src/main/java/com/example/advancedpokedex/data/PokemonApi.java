@@ -20,6 +20,7 @@ public class PokemonApi {
             String json = RequestHandler.sendGetRequest(BASE_URL + pokemonName);
             return objectMapper.readValue(json, Pokemon.class);
         } catch (IOException | NoInternetException e) {
+            //TODO
             e.printStackTrace();
             return null;
         }

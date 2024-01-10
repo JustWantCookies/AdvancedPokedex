@@ -6,5 +6,6 @@ module com.example.advancedpokedex {
     opens com.example.advancedpokedex.ui to javafx.fxml;
     exports com.example.advancedpokedex.ui;
 exports com.example.advancedpokedex.ui.internal;
+    exports com.example.advancedpokedex.services;
 
 }
