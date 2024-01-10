@@ -2,6 +2,7 @@ package com.example.advancedpokedex.ui;
 
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.PokemonService;
+import com.example.advancedpokedex.data.PokemonStat;
 import com.example.advancedpokedex.data.TypeApi;
 import com.example.advancedpokedex.data.pojo.Note;
 import com.example.advancedpokedex.services.NoteService;
@@ -22,6 +23,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A ui class for showing GlobalPokedex.
@@ -85,6 +87,12 @@ public class GlobalPokedex extends Application {
         loadPokemonTypesAsync(typeFilterComboBox);
         typeFilterComboBox.getItems().add("All");
 
+        ComboBox<String> statCriteriaComboBox = new ComboBox<>();
+        statCriteriaComboBox.setPromptText("Select stat criteria");
+        statCriteriaComboBox.getItems().addAll("HP", "Attack", "Defense", "Special-Attack", "Special-Defense", "Speed"); // Add more as needed
+        TextField statValueField = new TextField();
+        statValueField.setPromptText("Enter stat value");
+
         searchField.setPromptText("Search your Pokemon here!");
 
         listViewPokemon.setOnMouseClicked(event -> {
@@ -99,9 +107,12 @@ public class GlobalPokedex extends Application {
         searchField.textProperty().addListener((observable, oldValue, newValue) ->
                 filteredData.setPredicate(pokemon ->
                         (newValue.isEmpty() || pokemon.getName().toLowerCase().contains(newValue.toLowerCase()))
-                                && (typeFilterComboBox.getSelectionModel().isEmpty() || newValue.equals("All") || pokemon.getTypes().stream().anyMatch(t -> t.getType().getName().contains(newValue)))
+                                && (typeFilterComboBox.getSelectionModel().isEmpty() ||
+                                isValidStat(pokemon, statCriteriaComboBox.getValue(), statValueField.getText()) ||
+                                newValue.equals("All") || pokemon.getTypes().stream().anyMatch(t -> t.getType().getName().contains(newValue)))
                 )
         );
+
         typeFilterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
                 filteredData.setPredicate(pokemon ->
                         (searchField.getText().isEmpty() || pokemon.getName().toLowerCase().contains(searchField.getText().toLowerCase()))
@@ -109,12 +120,51 @@ public class GlobalPokedex extends Application {
                 )
         );
 
-        HBox filterBox = new HBox(searchField, typeFilterComboBox);
+        statCriteriaComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
+                filteredData.setPredicate(pokemon ->
+                        (searchField.getText().isEmpty() || pokemon.getName().toLowerCase().contains(searchField.getText().toLowerCase()))
+                                && (typeFilterComboBox.getSelectionModel().isEmpty() || newValue.equals("All") || pokemon.getTypes().stream().anyMatch(t -> t.getType().getName().contains(newValue)))
+                                && (newValue == null || isValidStat(pokemon, newValue, statValueField.getText()))
+                )
+        );
+
+        VBox statFilterBox = new VBox(statCriteriaComboBox, statValueField);
+        statFilterBox.setSpacing(10);
+
+        HBox filterBox = new HBox(statFilterBox, searchField, typeFilterComboBox);
         filterBox.setSpacing(10);
         pane.setTop(filterBox);
 
         pane.setCenter(listViewPokemon);
         return pane;
+    }
+
+    /**
+     * Checks if a given Pokémon's stat meets the specified criteria and value.
+     *
+     * @param pokemon  The Pokémon whose stat is being checked.
+     * @param criteria The stat criteria to be used for filtering (e.g., "HP", "Attack", "Defense", "Speed").
+     * @param value    The desired stat value to compare against.
+     * @return {@code true} if the Pokémon's stat meets the criteria and value, {@code false} otherwise.
+     */
+    private boolean isValidStat(Pokemon pokemon, String criteria, String value) {
+        if (criteria == null || value.isEmpty()) {
+            return true;
+        }
+
+        int statValue;
+        try {
+            statValue = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return false; // Invalid input
+        }
+
+        for(PokemonStat stat : pokemon.getStats()){
+            if(Objects.equals(stat.getStatName().getStatName(), criteria.toLowerCase())){
+                return stat.getBaseStat() >= statValue;
+            }
+        }
+        return false;
     }
 
     /**
