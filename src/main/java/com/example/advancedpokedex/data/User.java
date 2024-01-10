@@ -1,7 +1,5 @@
 package com.example.advancedpokedex.data;
 
-//ToDo: Write JavaDoc
-
 public class User
 {
     private final int uid; //muss auto-generated sein, denn darf nur einmal vorkommen

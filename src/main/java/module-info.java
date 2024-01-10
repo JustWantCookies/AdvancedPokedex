@@ -7,5 +7,6 @@ module com.example.advancedpokedex {
     exports com.example.advancedpokedex.ui;
 exports com.example.advancedpokedex.ui.internal;
     exports com.example.advancedpokedex.services;
+    exports com.example.advancedpokedex.exceptions;
 
 }

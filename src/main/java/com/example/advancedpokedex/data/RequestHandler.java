@@ -1,5 +1,8 @@
 package com.example.advancedpokedex.data;
 
+import com.example.advancedpokedex.exceptions.BackendRequestException;
+
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Scanner;
@@ -15,21 +18,18 @@ public class RequestHandler {
      *
      * @param urlString The URL to send the GET request to.
      * @return A string containing the response data from the URL.
-     * @throws NoInternetException  if there is no internet connection or the URL is unreachable.
+     * @throws BackendRequestException  if there is no internet connection or the URL is unreachable.
      */
-    public static String sendGetRequest(String urlString) throws NoInternetException {
-        //TODO refactor Exceptions here
+    public static String sendGetRequest(String urlString) throws BackendRequestException {
         try {
             URL url = new URL(urlString);
-
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
 
             int responseCode = connection.getResponseCode();
             if (responseCode != 200) {
-                //TODO
-                throw new RuntimeException("HttpResponseCode: " + responseCode);
+                throw new BackendRequestException("Repsonse Code is " + responseCode);
             }
 
             StringBuilder inline = new StringBuilder();
@@ -39,10 +39,9 @@ public class RequestHandler {
                 inline.append(scanner.nextLine());
             }
             scanner.close();
-
             return inline.toString();
-        } catch (Exception e) {
-            throw new NoInternetException("Unnable to send Request" + e.getMessage());
+        } catch (IOException e){
+            throw new BackendRequestException(e.getMessage());
         }
     }
 }

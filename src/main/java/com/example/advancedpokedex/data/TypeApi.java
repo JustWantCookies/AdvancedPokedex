@@ -1,5 +1,6 @@
 package com.example.advancedpokedex.data;
 
+import com.example.advancedpokedex.exceptions.BackendRequestException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,22 +18,20 @@ public class TypeApi {
      * Fetches a list of Pokemon types from an external API.
      *
      * @return A List of String containing the names of Pokemon types.
-     * @throws IOException          if an I/O error occurs during the HTTP request.
-     * @throws NoInternetException  if there is no internet connection or the API is unreachable.
+     * @throws BackendRequestException         if an I/O error occurs during the HTTP request or if there is no internet connection or the API is unreachable.
      */
-    public List<String> getTypes() throws IOException, NoInternetException {
+    public List<String> getTypes() throws BackendRequestException{
         List<String> allTypes = new ArrayList<>();
 
-        String jsonResponse = RequestHandler.sendGetRequest(BASE_URL);
-        JsonNode rootNode = objectMapper.readTree(jsonResponse);
-        JsonNode resultsNode = rootNode.path("results");
-
         try {
-            for (JsonNode resultNode : resultsNode) {
-                allTypes.add(resultNode.path("name").asText());
-            }
-        } catch (Exception e){
-            System.out.println(e.getMessage());
+            String jsonResponse = RequestHandler.sendGetRequest(BASE_URL);
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            JsonNode resultsNode = rootNode.path("results");
+        } catch (IOException | NoInternetException e) {
+            throw new BackendRequestException(e.getMessage());
+        }
+        for (JsonNode resultNode : resultsNode) {
+            allTypes.add(resultNode.path("name").asText());
         }
 
         return allTypes;

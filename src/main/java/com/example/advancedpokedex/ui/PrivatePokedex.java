@@ -4,6 +4,7 @@ import com.example.advancedpokedex.data.AuthServiceDatabaseException;
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.User;
 import com.example.advancedpokedex.data.pojo.Note;
+import com.example.advancedpokedex.exceptions.InternalProcessException;
 import com.example.advancedpokedex.services.AuthService;
 import com.example.advancedpokedex.ui.internal.PokemonDetailScreen;
 import com.example.advancedpokedex.ui.internal.PokemonListCellPrivate;
@@ -49,7 +50,7 @@ public class PrivatePokedex extends GlobalPokedex {
         try {
             authService = new AuthService();
         } catch (AuthServiceDatabaseException e) {
-            //TODO
+            throw new InternalProcessException(e.getMessage());
         }
 
         mainStage.setTitle("Pokedex!");

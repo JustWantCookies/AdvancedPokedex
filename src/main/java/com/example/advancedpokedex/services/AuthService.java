@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+import com.example.advancedpokedex.exceptions.InternalProcessException;
 import com.example.advancedpokedex.ui.LoginWindow;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -156,7 +157,7 @@ public class AuthService
 
             return true;
         }
-        catch (IndexOutOfBoundsException | NoSuchAlgorithmException except)
+        catch (IndexOutOfBoundsException | InternalProcessException except)
         {
             return false;
         }
@@ -326,9 +327,8 @@ public class AuthService
     /**
      * helper method: Generate a Random UserId for User-Creation
      * @return userid
-     * @throws IndexOutOfBoundsException seed to big -> user limit reached
      */
-    private int generateUid() throws IndexOutOfBoundsException
+    private int generateUid()
     {
         boolean uidused=true;
         int uid=-1;
@@ -394,12 +394,17 @@ public class AuthService
      * helper method: Hashes a given password
      * @param plainpw password in plaintext
      * @return hashed password
-     * @throws NoSuchAlgorithmException invalid algorithm
+     * @throws InternalProcessException invalid algorithm
      */
-    private String hashPasswd(String plainpw) throws NoSuchAlgorithmException
+    private String hashPasswd(String plainpw) throws InternalProcessException
     {
         //hash plain password
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new InternalProcessException(e.getMessage());
+        }
         byte[] hash = digest.digest(plainpw.getBytes(StandardCharsets.UTF_8));
 
         //return hash as string
