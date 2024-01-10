@@ -1,4 +1,4 @@
-package com.example.advancedpokedex.data;
+package com.example.advancedpokedex.exceptions;
 
 /*Custom Exception with or without exception*/
 public class AuthServiceDatabaseException extends Exception
