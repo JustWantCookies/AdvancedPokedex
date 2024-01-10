@@ -3,7 +3,6 @@ package com.example.advancedpokedex.ui;
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.PokemonService;
 import com.example.advancedpokedex.data.TypeApi;
-import com.example.advancedpokedex.data.User;
 import com.example.advancedpokedex.data.pojo.Note;
 import com.example.advancedpokedex.services.NoteService;
 import com.example.advancedpokedex.ui.internal.GlobalPokedexServerRunnable;
@@ -63,7 +62,7 @@ public class GlobalPokedex extends Application {
         loadPokemonDataDetails();
 
         int serverPort = 12345; // Choose a port number
-        GlobalPokedexServerRunnable serverRunnable = new GlobalPokedexServerRunnable(serverPort, this);
+        GlobalPokedexServerRunnable serverRunnable = new GlobalPokedexServerRunnable(serverPort);
         Thread serverThread = new Thread(serverRunnable);
         serverThread.setDaemon(true);
         serverThread.start();

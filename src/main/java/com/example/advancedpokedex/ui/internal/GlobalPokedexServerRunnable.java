@@ -1,5 +1,6 @@
 package com.example.advancedpokedex.ui.internal;
 
+import com.example.advancedpokedex.exceptions.InternalProcessException;
 import com.example.advancedpokedex.ui.GlobalPokedex;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -11,11 +12,9 @@ import java.net.Socket;
 public class GlobalPokedexServerRunnable implements Runnable {
     private ServerSocket serverSocket;
     private final int SERVER_PORT;
-    private final GlobalPokedex globalPokedex;
 
-    public GlobalPokedexServerRunnable(int port, GlobalPokedex globalPokedex) {
+    public GlobalPokedexServerRunnable(int port) {
         SERVER_PORT = port;
-        this.globalPokedex = globalPokedex;
     }
 
     /**
@@ -24,17 +23,16 @@ public class GlobalPokedexServerRunnable implements Runnable {
      * It runs indefinitely until an exception occurs.
      */
     @Override
-    public void run() {
+    public void run() throws InternalProcessException {
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-            System.out.println("GlobalPokedexServer is listening for incoming connections...");
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 handleClient(clientSocket);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new InternalProcessException(e.getMessage());
         }
     }
 
@@ -44,19 +42,18 @@ public class GlobalPokedexServerRunnable implements Runnable {
      *
      * @param clientSocket The connected client socket to handle communication with.
      */
-    private void handleClient(Socket clientSocket) {
+    private void handleClient(Socket clientSocket) throws InternalProcessException {
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())) {
             Object receivedObject = ois.readObject();
 
             if (receivedObject instanceof String) {
                 String message = (String) receivedObject;
-                System.out.println("Received message from PrivatePokedex: " + message);
 
                 // Display a pop-up notification with the received message
                 Platform.runLater(() -> showAlert("Message from PrivatePokedex", message));
             }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new InternalProcessException(e.getMessage());
         }
     }
 

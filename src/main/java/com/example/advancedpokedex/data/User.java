@@ -1,6 +1,8 @@
 package com.example.advancedpokedex.data;
 
-public class User
+import java.io.Serializable;
+
+public class User implements Serializable
 {
     private final int uid; //muss auto-generated sein, denn darf nur einmal vorkommen
     private String uname; //Username plain-text

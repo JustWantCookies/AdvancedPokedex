@@ -22,10 +22,12 @@ import java.util.Optional;
  * A ui class for showing PrivatPokedex.
  */
 public class PrivatePokedex extends GlobalPokedex {
+
+    private static final String PUBLIC = "Public";
+    private static final String PRIVATE = "Private";
+
     PrivatePokedexClient client = new PrivatePokedexClient();
     private User user;
-
-    private Scene authScene;
     private AuthService authService;
 
     public PrivatePokedex() {
@@ -45,7 +47,7 @@ public class PrivatePokedex extends GlobalPokedex {
         mainStage = stage;
         overViewScene = new Scene(buildOverviewScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
         detailScreen = new PokemonDetailScreen(mainStage, overViewScene); // Initialize the detailScreen
-        authScene = new Scene(buildAuthScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
+        Scene authScene = new Scene(buildAuthScene(), WINDOW_WIDTH, WINDOW_HEIGHT);
 
         try {
             authService = new AuthService();
@@ -129,7 +131,7 @@ public class PrivatePokedex extends GlobalPokedex {
      */
     private void addComment(Pokemon pokemon) {
         // Create a choice dialog to select comment visibility
-        ChoiceDialog<String> choiceDialog = new ChoiceDialog<>("Public", "Public", "Private");
+        ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(PUBLIC, PUBLIC, PRIVATE);
         choiceDialog.setTitle("Add Comment");
         choiceDialog.setHeaderText("Add a comment for " + pokemon.getName());
         choiceDialog.setContentText("Select comment visibility:");
@@ -146,7 +148,7 @@ public class PrivatePokedex extends GlobalPokedex {
 
             commentResult.ifPresent(comment -> {
                 client.sendMessage("COMMENT MADE -> " + comment);
-                noteService.writeNoteForPokemon(pokemon.getName(), comment, user, visibility.equals("Public"));
+                noteService.writeNoteForPokemon(pokemon.getName(), comment, user, visibility.equals(PUBLIC));
 
                 showAlert("Comment Added", visibility + " comment for " + pokemon.getName() + " added successfully.");
             });
@@ -159,6 +161,7 @@ public class PrivatePokedex extends GlobalPokedex {
      *
      * @param listViewPokemon The ListView to set the cell factory for.
      */
+    @Override
     protected void setListFactory(ListView<Pokemon> listViewPokemon) {
         listViewPokemon.setCellFactory(param -> new PokemonListCellPrivate());
     }

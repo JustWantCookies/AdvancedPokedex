@@ -2,6 +2,7 @@ package com.example.advancedpokedex.services;
 
 import com.example.advancedpokedex.data.User;
 import com.example.advancedpokedex.data.pojo.Note;
+import com.example.advancedpokedex.exceptions.InternalProcessException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class NoteService {
      * @param pokemonName The name of the Pokemon for which to retrieve notes.
      * @return A List of Note objects containing all notes for the specified Pokemon.
      */
-    public List<Note> readAllNotesForPokemon(String pokemonName) {
+    public List<Note> readAllNotesForPokemon(String pokemonName) throws InternalProcessException {
         List<Note> pokemonNotes = new ArrayList<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(notesFilePath))) {
             Map<String, List<Note>> allNotes = (Map<String, List<Note>>) ois.readObject();
@@ -38,7 +39,7 @@ public class NoteService {
                 pokemonNotes.addAll(allNotes.get(pokemonName));
             }
         } catch (IOException | ClassNotFoundException e) {
-            // Handle exceptions (e.g., file not found or deserialization error)
+            throw new InternalProcessException(e.getMessage());
         }
         return pokemonNotes;
     }
@@ -51,14 +52,15 @@ public class NoteService {
      * @param currentUser The User who is writing the note.
      * @param isPublic    A boolean indicating whether the note should be public or private.
      */
-    public void writeNoteForPokemon(String pokemonName, String note, User currentUser, boolean isPublic) {
+    public void writeNoteForPokemon(String pokemonName, String note, User currentUser, boolean isPublic)
+    throws InternalProcessException{
         Note newNote = new Note(note, currentUser, isPublic);
 
         Map<String, List<Note>> allNotes = new HashMap<>();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(notesFilePath))) {
             allNotes = (Map<String, List<Note>>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            // Handle exceptions (e.g., file not found or deserialization error)
+            throw new InternalProcessException(e.getMessage());
         }
 
         List<Note> notes = allNotes.computeIfAbsent(pokemonName, k -> new ArrayList<>());
@@ -67,7 +69,7 @@ public class NoteService {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(notesFilePath))) {
             oos.writeObject(allNotes);
         } catch (IOException e) {
-            // Handle exceptions (e.g., file write error)
+            throw new InternalProcessException(e.getMessage());
         }
     }
 }

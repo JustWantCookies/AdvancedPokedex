@@ -35,7 +35,6 @@ public class PrivatePokedexClient {
         try (ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())) {
             oos.writeObject(message);
             oos.flush();
-            System.out.println("Sent message to GlobalPokedex: " + message);
         } catch (IOException e) {
             throw new InternalProcessException(e.getMessage());
         }

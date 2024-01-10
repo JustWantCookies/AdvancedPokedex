@@ -23,6 +23,7 @@ public class AuthServiceDatabaseException extends Exception
         message=msg;
     }
 
+    @Override
     public String getMessage()
     {
         return this.message;

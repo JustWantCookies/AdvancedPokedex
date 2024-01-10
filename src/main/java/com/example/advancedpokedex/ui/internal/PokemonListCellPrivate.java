@@ -5,7 +5,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.RadioButton;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 public class PokemonListCellPrivate extends ListCell<Pokemon> {
     private final Label title = new Label();

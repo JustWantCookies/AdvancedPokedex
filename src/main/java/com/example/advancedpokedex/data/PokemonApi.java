@@ -7,6 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PokemonApi {
 
+    private PokemonApi(){
+
+    }
+
     private static final String BASE_URL = "https://pokeapi.co/api/v2/pokemon/";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -21,7 +25,7 @@ public class PokemonApi {
         try {
             String json = RequestHandler.sendGetRequest(BASE_URL + pokemonName);
             return objectMapper.readValue(json, Pokemon.class);
-        } catch (IOException | NoInternetException e) {
+        } catch (IOException e) {
             throw new BackendRequestException(e.getMessage());
         }
     }
@@ -37,7 +41,7 @@ public class PokemonApi {
         try {
             String jsonResponse = RequestHandler.sendGetRequest(url);
             return objectMapper.readValue(jsonResponse, Pokemon.class);
-        } catch (IOException | NoInternetException e) {
+        } catch (IOException e) {
             throw new BackendRequestException(e.getMessage());
         }
     }

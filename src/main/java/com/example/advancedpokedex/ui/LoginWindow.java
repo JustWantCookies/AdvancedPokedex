@@ -55,7 +55,7 @@ public class LoginWindow
         HBox buttonbox = new HBox(10);
         Button btnOK = new Button("OK");
 
-        btnOK.setOnAction((event)->
+        btnOK.setOnAction(event->
         {
            //Source: https://stackoverflow.com/questions/34865383/variable-used-in-lambda-expression-should-be-final-or-effectively-final
            usrref.set(new User(0,userInpt.getText(),pwInbt.getText()));
@@ -63,7 +63,7 @@ public class LoginWindow
         });
 
         Button btnCancel = new Button("Cancel");
-        btnCancel.setOnAction((event)-> stage.close());
+        btnCancel.setOnAction(event-> stage.close());
 
 
         buttonbox.setAlignment(Pos.BOTTOM_RIGHT);
