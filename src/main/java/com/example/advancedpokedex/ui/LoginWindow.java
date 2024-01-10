@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 public class LoginWindow
 {
@@ -57,13 +58,15 @@ public class LoginWindow
 
         btnOK.setOnAction(event->
         {
-           //Source: https://stackoverflow.com/questions/34865383/variable-used-in-lambda-expression-should-be-final-or-effectively-final
            usrref.set(new User(0,userInpt.getText(),pwInbt.getText()));
            stage.close();
         });
 
         Button btnCancel = new Button("Cancel");
-        btnCancel.setOnAction(event-> stage.close());
+        btnCancel.setOnAction(event -> {
+            usrref.set(null);
+            stage.close();
+        });
 
 
         buttonbox.setAlignment(Pos.BOTTOM_RIGHT);
@@ -74,8 +77,8 @@ public class LoginWindow
 
         //Finalize Stage Setup
         stage.setScene(new Scene(grid));
-        stage.show();
+        stage.showAndWait();
 
-        return rtnUser;
+        return usrref.get();
     }
 }

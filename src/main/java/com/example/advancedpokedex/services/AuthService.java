@@ -299,22 +299,19 @@ public class AuthService {
      * @return userid
      */
     private int generateUid() {
-        boolean uidused = true;
-        int uid = -1;
-
-        while (uidused) {
-            //generate random uid
-
-            if ((users.size() >= Integer.MAX_VALUE - 1000))
-                throw new IndexOutOfBoundsException();
-
-            int randuid = random.nextInt(users.size() + 10000);
-
-            //check if uid already used -> no->return false, true=return true
-            uidused = users.parallelStream().noneMatch(u -> u.getUid() == randuid);
+        if (users.size() >= Integer.MAX_VALUE - 1000) {
+            throw new IndexOutOfBoundsException();
         }
 
-        return uid;
+        Set<Integer> usedUids = new HashSet<>(users.size());
+
+        while (true) {
+            int randUid = random.nextInt(Integer.MAX_VALUE - 1000);
+
+            if (!usedUids.contains(randUid)) {
+                return randUid;
+            }
+        }
     }
 
     /**
