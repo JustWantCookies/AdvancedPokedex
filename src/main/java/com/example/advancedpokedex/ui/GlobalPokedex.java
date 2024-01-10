@@ -35,6 +35,12 @@ public class GlobalPokedex extends Application {
 
     protected PokemonDetailScreen detailScreen;
 
+    /**
+     * Initializes and starts the Pokedex application by setting up the main stage,
+     * loading Pokemon data, initializing the detail screen, and starting the server thread.
+     *
+     * @param stage The primary stage for the Pokedex application.
+     */
     @Override
     public void start(Stage stage) {
         mainStage = stage;
@@ -54,6 +60,12 @@ public class GlobalPokedex extends Application {
         serverThread.start();
     }
 
+    /**
+     * Builds and returns the overview scene for displaying a list of Pokemon.
+     * This scene includes a search field, a type filter combo box, and a ListView for displaying the Pokemon.
+     *
+     * @return A BorderPane containing the overview scene.
+     */
     protected BorderPane buildOverviewScene() {
         BorderPane pane = new BorderPane();
         TextField searchField = new TextField();
@@ -97,20 +109,40 @@ public class GlobalPokedex extends Application {
         return pane;
     }
 
+    /**
+     * Sets the cell factory for a ListView of Pokemon, allowing custom rendering of each item.
+     *
+     * @param listViewPokemon The ListView to set the cell factory for.
+     */
     protected void setListFactory(ListView<Pokemon> listViewPokemon) {
         listViewPokemon.setCellFactory(param -> new PokemonListCell());
     }
 
+    /**
+     * Navigates to the detail page for a specific Pokemon, displaying its detailed information.
+     *
+     * @param pokemon The Pokemon object for which to navigate to the detail page.
+     */
     private void navigateToDetailPage(Pokemon pokemon) {
         Scene detailScene = new Scene(buildDetailScreen(pokemon), GlobalPokedex.WINDOW_WIDTH, GlobalPokedex.WINDOW_HEIGHT);
         mainStage.setScene(detailScene);
         mainStage.show();
     }
 
+    /**
+     * Builds and returns the detail screen for a specific Pokemon, which includes its detailed information.
+     *
+     * @param pokemon The Pokemon object for which to build the detail screen.
+     * @return A BorderPane containing the detail screen for the specified Pokemon.
+     */
     protected BorderPane buildDetailScreen(Pokemon pokemon){
         return detailScreen.buildDetailScene(pokemon);
     }
 
+    /**
+     * Loads detailed Pokemon data asynchronously and populates the Pokemon list with the retrieved data.
+     * This method creates a background task to fetch Pokemon details from a service.
+     */
     protected void loadPokemonDataDetails() {
         Task<List<Pokemon>> loadPokemonTask = new Task<>() {
             @Override
@@ -129,6 +161,11 @@ public class GlobalPokedex extends Application {
         thread.start();
     }
 
+    /**
+     * Loads Pokemon types asynchronously and populates the provided ComboBox with the retrieved types.
+     *
+     * @param typeFilterComboBox The ComboBox to populate with Pokemon types.
+     */
     private void loadPokemonTypesAsync(ComboBox<String> typeFilterComboBox) {
         Task<List<String>> loadTypesTask = new Task<>() {
             @Override

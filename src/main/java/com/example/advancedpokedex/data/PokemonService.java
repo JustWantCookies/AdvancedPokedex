@@ -14,6 +14,13 @@ public class PokemonService {
     private static final String BASE_URL = "https://pokeapi.co/api/v2/pokemon/?offset=0&limit=10";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Fetches a list of Pokemon from an external API.
+     *
+     * @return A List of Pokemon objects with basic information (name and API URL).
+     * @throws IOException          if an I/O error occurs during the HTTP request.
+     * @throws NoInternetException  if there is no internet connection or the API is unreachable.
+     */
     /*
     public List<Pokemon> getPokemons() throws IOException, NoInternetException {
         List<Pokemon> allPokemon = new ArrayList<>();
@@ -37,6 +44,13 @@ public class PokemonService {
     }
     */
 
+    /**
+     * Fetches detailed information for a list of Pokemon from an external API.
+     *
+     * @return A List of Pokemon objects containing detailed information.
+     * @throws IOException          if an I/O error occurs during the HTTP request.
+     * @throws NoInternetException  if there is no internet connection or the API is unreachable.
+     */
     public List<Pokemon> getPokemonsDetalis() throws IOException, NoInternetException {
         List<Pokemon> allPokemon = new ArrayList<>();
         String nextUrl = BASE_URL;
@@ -53,6 +67,14 @@ public class PokemonService {
         return allPokemon;
     }
 
+    /**
+     * Fetches detailed information for a specific Pokemon using its API URL.
+     *
+     * @param url The API URL of the Pokemon for which to retrieve details.
+     * @return A Pokemon object containing detailed information.
+     * @throws IOException          if an I/O error occurs during the HTTP request.
+     * @throws NoInternetException  if there is no internet connection or the API is unreachable.
+     */
     public Pokemon getPokemonDetail(String url) throws IOException, NoInternetException {
         return PokemonApi.getPokemonDetails(url);
     }

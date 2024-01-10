@@ -18,6 +18,11 @@ public class GlobalPokedexServerRunnable implements Runnable {
         this.globalPokedex = globalPokedex;
     }
 
+    /**
+     * Listens for incoming client connections and handles each client's requests.
+     * This method continuously accepts client connections and processes them.
+     * It runs indefinitely until an exception occurs.
+     */
     @Override
     public void run() {
         try {
@@ -33,6 +38,12 @@ public class GlobalPokedexServerRunnable implements Runnable {
         }
     }
 
+    /**
+     * Handles communication with a connected client socket, reading and processing incoming messages.
+     * When a message is received, it is displayed as a pop-up notification.
+     *
+     * @param clientSocket The connected client socket to handle communication with.
+     */
     private void handleClient(Socket clientSocket) {
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())) {
             Object receivedObject = ois.readObject();
@@ -49,6 +60,12 @@ public class GlobalPokedexServerRunnable implements Runnable {
         }
     }
 
+    /**
+     * Displays an informational alert dialog with the specified title and content.
+     *
+     * @param title   The title of the alert dialog.
+     * @param content The content text to be displayed in the alert dialog.
+     */
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);

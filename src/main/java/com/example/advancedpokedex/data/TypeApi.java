@@ -13,6 +13,13 @@ public class TypeApi {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private JsonNode resultsNode;
 
+    /**
+     * Fetches a list of Pokemon types from an external API.
+     *
+     * @return A List of String containing the names of Pokemon types.
+     * @throws IOException          if an I/O error occurs during the HTTP request.
+     * @throws NoInternetException  if there is no internet connection or the API is unreachable.
+     */
     public List<String> getTypes() throws IOException, NoInternetException {
         List<String> allTypes = new ArrayList<>();
 

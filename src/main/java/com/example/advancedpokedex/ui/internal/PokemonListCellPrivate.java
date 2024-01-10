@@ -21,6 +21,13 @@ public class PokemonListCellPrivate extends ListCell<Pokemon> {
         title.setStyle("-fx-font-size: 20px;");
     }
 
+    /**
+     * Customizes the rendering of a single item in a ListView cell for displaying Pokemon data.
+     * Updates the cell's content to show the Pokemon's name and whether it is a favorite.
+     *
+     * @param pokemon The Pokemon object to be displayed in the cell.
+     * @param empty   A boolean indicating whether the cell should be empty.
+     */
     @Override
     protected void updateItem(Pokemon pokemon, boolean empty) {
         super.updateItem(pokemon, empty);
