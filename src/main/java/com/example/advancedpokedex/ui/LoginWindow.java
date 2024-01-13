@@ -25,8 +25,6 @@ public class LoginWindow
      */
     public User showWindow()
     {
-        User rtnUser=null;
-
         //Stage Setup
         Stage stage = new Stage();
         stage.setTitle("Anmeldung");
