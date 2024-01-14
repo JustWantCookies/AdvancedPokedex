@@ -1,6 +1,6 @@
 package com.example.advancedpokedex.services;
 
-import com.example.advancedpokedex.data.AuthServiceDatabaseException;
+import com.example.advancedpokedex.exceptions.AuthServiceDatabaseException;
 import com.example.advancedpokedex.data.User;
 
 import java.io.IOException;

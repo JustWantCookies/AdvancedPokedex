@@ -1,6 +1,6 @@
 package com.example.advancedpokedex.ui;
 
-import com.example.advancedpokedex.data.AuthServiceDatabaseException;
+import com.example.advancedpokedex.exceptions.AuthServiceDatabaseException;
 import com.example.advancedpokedex.data.Pokemon;
 import com.example.advancedpokedex.data.User;
 import com.example.advancedpokedex.data.pojo.Note;

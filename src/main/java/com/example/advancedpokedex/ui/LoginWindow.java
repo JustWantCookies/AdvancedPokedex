@@ -13,7 +13,6 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 public class LoginWindow
 {
@@ -26,8 +25,6 @@ public class LoginWindow
      */
     public User showWindow()
     {
-        User rtnUser=null;
-
         //Stage Setup
         Stage stage = new Stage();
         stage.setTitle("Anmeldung");
