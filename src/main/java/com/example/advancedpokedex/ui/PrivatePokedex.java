@@ -112,7 +112,7 @@ public class PrivatePokedex extends GlobalPokedex {
         StringBuilder stringBuilder = new StringBuilder();
         List<Note> notes = noteService.readAllNotesForPokemon(pokemon.getName());
         for (Note note : notes) {
-            if (!note.isPublic() || note.getAuthor() != user)
+            if (!note.isPublic() && note.getAuthor() != user)
                 continue;
             String username = "Unknown";
             if (note.getAuthor() != null)
